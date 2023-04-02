@@ -223,9 +223,10 @@ def box_weights(points, boxes, crop_threshold = 1e-6, slope = 8, normalize_weigh
     """
     num_boxes = (int)(boxes.shape[0]/len(points))
     points_padded = torch.repeat_interleave(points.points_padded(), num_boxes, dim=0)
-    boxes_flat = boxes#.view(-1, 8)
-    box_coord = box_coordinate(points_padded, boxes_flat)
-    box_weights = sigmoid_weights(box_coord, boxes_flat, slope)#.view(boxes.shape[0], boxes.shape[1], -1)
+    boxes_flat = boxes
+    # 转移到 box 的坐标系
+    box_coord_points = box_coordinate(points_padded, boxes_flat)
+    box_weights = sigmoid_weights(box_coord_points, boxes_flat, slope)
     idx = [torch.nonzero(box_weights[i][:points.num_points_per_cloud()[i//num_boxes]]>crop_threshold).squeeze(-1) for i in range(box_weights.shape[0])]
     not_empty = [len(i)>0 for i in idx]
     new_points = [points_padded[i][idx[i]] for i in range(box_weights.shape[0])]
@@ -286,17 +287,6 @@ def transform_boxes(box_parameters, transform):
     transformed_positions = transform.transform_points(positions.unsqueeze(1)).squeeze(1)
     transformed_headings = headings+transforms.matrix_to_euler_angles(transform.get_matrix()[:,:3,:3], 'ZYX')[:, :1]
     return torch.cat((box_parameters[:,:1], transformed_positions, box_parameters[:,4:7], transformed_headings), dim=-1)
-
-# def get_z_rotation(R):
-#     """
-#     :param R: 3x3 or bx3x3 tensor
-#     :return: 2x2 or bx2x2 tensor
-#     """
-#     angle_2d = transforms.matrix_to_euler_angles(R, 'ZYX')[:, 0]
-#     # matrix_2d= torch.stack([torch.stack([torch.cos(angle_2d), -torch.sin(angle_2d)]),
-#     #              torch.stack([torch.sin(angle_2d), torch.cos(angle_2d)])]).permute(2, 0, 1)
-#     matrix_2d = angle2rot_2d(angle_2d)
-#     return matrix_2d
 
 def rotation_2dto3d(R):
     R = torch.cat([R, torch.zeros_like(R[...,:1])], axis=-1)

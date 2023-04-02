@@ -207,9 +207,17 @@ def optimize(cfg):
         pc2_normals = pc2_normals[is_near_t]
 
     pc1_normals, pc2_normals = torch.from_numpy(pc1_normals).float().unsqueeze(0), torch.from_numpy(pc2_normals).float().unsqueeze(0)
-    pc1, pc2 = torch.from_numpy(pc1).float().unsqueeze(0), torch.from_numpy(pc2).float().unsqueeze(0)
+    pc1, pc2 = torch.from_numpy(pc1).float().unsqueeze(0).to('cuda'), torch.from_numpy(pc2).float().unsqueeze(0)
     trans = torch.from_numpy(np.linalg.inv(poses[cfg['data']['p1_id']] @ calib) @ poses[cfg['data']['p2_id']] @ calib).float()
     R_ego, t_ego = [trans[:3, :3]], [trans[:3, 3]]
+
+    keep_mask = torch.ones((anchors.shape[0],), dtype=torch.bool)
+    for i in range(anchors.shape[0]):
+        anchor = anchors[i]
+        dists = torch.norm(pc1[0] - anchor[:3], dim=1)
+        if torch.any(dists < 5):
+            keep_mask[i] = False
+    anchors = anchors[~keep_mask]
 
     # optimize
     optimizer = SF_Optimizer(anchors, hyperparameters, pc1, pc2, pc1_normals, pc2_normals, R_ego, t_ego)
