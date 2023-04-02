@@ -1,0 +1,41 @@
+misc:
+  run_mode: test # Mode to run the network in
+  num_points: 99999 # Number of points
+  use_gpu: True # If GPU should be used or not
+  visualize: True
+
+data:
+  p1_id: 100
+  p2_id: 101
+  pc_path:
+    - "/media/dl/data_pc/semanticKITTI/sequences/02/velodyne/000100.bin"
+    - "/media/dl/data_pc/semanticKITTI/sequences/02/velodyne/000101.bin"
+  poses_path: "/media/dl/data_pc/semanticKITTI/sequences/02/poses.txt"
+  calib_path: "/media/dl/data_pc/semanticKITTI/sequences/02/calib.txt"
+  remove_ground: True # Remove ground by simple thresholding of the height coordinate
+  only_near_points: True # Only consider near points (less than 35m away) [Used in all scene flow algorithms]
+  filter_normals: True
+
+test:
+  batch_size: 1 # Test batch size
+  num_workers: 0 # Num of workers to use for the test data set
+
+hyperparameters:
+  box_depth: 3
+  box_scale: 1.25
+  sigmoid_slope: 8
+  epsilon: .05
+  background_boost_coeff: 0
+  heading_loss_coeff: 1000
+  angle_loss_coeff: .25
+  mass_loss_coeff: .002
+  dim_loss_coeff: 8
+  prune_threshold: 50
+  confidence_threshold: .85
+  seg_threshold: .03
+  print_loss: False
+  lr: .015
+  epochs: 500
+  delta_threshold: .2
+  cycle: True
+  cycle_threshold: .2
